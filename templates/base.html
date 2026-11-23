@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Confidence Tracker{% endblock %}</title>
+    <title>{% block title %}Hopemeter{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <nav class="navbar">
-        <div class="nav-brand">Confidence Tracker</div>
+        <div class="nav-brand">Hopemeter</div>
         <div class="nav-links">
             {% if session.user_id %}
                 <span class="nav-user">Hi, {{ session.username }}</span>
