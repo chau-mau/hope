@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Confidence Tracker{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    {% if logo_url %}
+    <div class="exam-logo">
+        <img src="{{ logo_url }}" alt="Exam logo">
+    </div>
+    {% endif %}
+    <h1>My Learning Progress</h1>
+</div>
+
+{% if affirmation %}
+<div class="affirmation-banner" id="affirmation-banner" data-affirmations='{{ affirmations | tojson }}' data-interval="300000">
+    <span class="affirmation-icon">&#9734;</span>
+    <p id="affirmation-text">{{ affirmation }}</p>
+</div>
+{% endif %}
+
+<div class="card logo-upload-card">
+    <h3>Exam Logo</h3>
+    <form method="POST" action="{{ url_for('upload_logo') }}" enctype="multipart/form-data" class="logo-form">
+        <input type="file" name="logo" accept="image/png, image/jpeg, image/gif, image/webp" required>
+        <button type="submit" class="btn btn-primary">Upload Logo</button>
+    </form>
+    <p class="upload-hint">Upload the logo of the exam you are preparing for.</p>
+</div>
+
+<div class="card exam-date-card">
+    <h3>Exam Date</h3>
+    {% if days_to_go is not none %}
+    <div class="days-to-go">
+        <span class="days-number">{{ days_to_go }}</span>
+        <span class="days-label">day{% if days_to_go != 1 %}s{% endif %} to go</span>
+    </div>
+    <p class="exam-date-text">Exam date: {{ exam_date.strftime('%d %B %Y') }}</p>
+    {% else %}
+    <p class="exam-date-text">No exam date set yet.</p>
+    {% endif %}
+    <form method="POST" action="{{ url_for('set_exam_date') }}" class="exam-date-form">
+        <input type="date" name="exam_date" {% if exam_date %}value="{{ exam_date }}"{% endif %} required>
+        <button type="submit" class="btn btn-primary">Set Date</button>
+    </form>
+</div>
+
+{% if suggestion %}
+<div class="card suggestion-card">
+    <h3>Suggestion</h3>
+    <p>{{ suggestion }}</p>
+</div>
+{% endif %}
+
+<div class="progress-overview">
+    <div class="progress-meter">
+        <div class="circular-progress" data-value="{{ average_confidence }}" data-type="confidence">
+            <svg viewBox="0 0 120 120">
+                <circle class="progress-track" cx="60" cy="60" r="54"></circle>
+                <circle class="progress-fill" cx="60" cy="60" r="54"></circle>
+            </svg>
+            <div class="progress-value">
+                <span class="percentage">{{ average_confidence }}</span>
+                <span class="label">%</span>
+            </div>
+        </div>
+        <div class="progress-info">
+            <h2>Prep</h2>
+            <p>{{ total }} subject{% if total != 1 %}s{% endif %}</p>
+        </div>
+    </div>
+
+    <div class="progress-meter">
+        <div class="circular-progress" data-value="{{ average_preparation }}" data-type="preparation">
+            <svg viewBox="0 0 120 120">
+                <circle class="progress-track" cx="60" cy="60" r="54"></circle>
+                <circle class="progress-fill" cx="60" cy="60" r="54"></circle>
+            </svg>
+            <div class="progress-value">
+                <span class="percentage">{{ average_preparation }}</span>
+                <span class="label">%</span>
+            </div>
+        </div>
+        <div class="progress-info">
+            <h2>Hopefull</h2>
+            <p>Overall hopefull</p>
+        </div>
+    </div>
+</div>
+
+<div class="card add-subject-card">
+    <h3>Add New Subject</h3>
+    <form method="POST" action="{{ url_for('add_subject') }}" class="add-form">
+        <input type="text" name="name" placeholder="Subject / topic name" required>
+        <div class="slider-group">
+            <label>Prep %</label>
+            <div class="confidence-input">
+                <input type="range" name="confidence" min="0" max="100" value="0" class="confidence-slider" oninput="this.nextElementSibling.value = this.value + '%'">
+                <output class="confidence-output">0%</output>
+            </div>
+        </div>
+        <div class="slider-group">
+            <label>Hopefull %</label>
+            <div class="confidence-input">
+                <input type="range" name="preparation" min="0" max="100" value="0" class="confidence-slider preparation-slider" oninput="this.nextElementSibling.value = this.value + '%'">
+                <output class="confidence-output">0%</output>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Subject</button>
+    </form>
+</div>
+
+{% if subjects %}
+<div class="subjects-list">
+    <h3>Subjects</h3>
+    {% for subject in subjects %}
+    <div class="subject-card">
+        <div class="subject-header">
+            <h4>{{ subject.name }}</h4>
+            <form method="POST" action="{{ url_for('delete_subject', subject_id=subject.id) }}" class="delete-form">
+                <button type="submit" class="btn-delete" onclick="return confirm('Delete this subject?')">&times;</button>
+            </form>
+        </div>
+        <form method="POST" action="{{ url_for('update_subject', subject_id=subject.id) }}" class="update-form">
+            <div class="subject-sliders">
+                <div class="slider-group">
+                    <label>Prep %</label>
+                    <div class="confidence-input">
+                        <input type="range" name="confidence" min="0" max="100" value="{{ subject.confidence }}" class="confidence-slider" oninput="this.nextElementSibling.value = this.value + '%'; updateLinearBar(this, 'confidence-bar-{{ subject.id }}')">
+                        <output class="confidence-output">{{ subject.confidence }}%</output>
+                    </div>
+                </div>
+                <div class="slider-group">
+                    <label>Hopefull %</label>
+                    <div class="confidence-input">
+                        <input type="range" name="preparation" min="0" max="100" value="{{ subject.preparation }}" class="confidence-slider preparation-slider" oninput="this.nextElementSibling.value = this.value + '%'; updateLinearBar(this, 'preparation-bar-{{ subject.id }}')">
+                        <output class="confidence-output">{{ subject.preparation }}%</output>
+                    </div>
+                </div>
+            </div>
+            <div class="subject-bars">
+                <div class="linear-progress">
+                    <div id="confidence-bar-{{ subject.id }}" class="linear-fill" style="width: {{ subject.confidence }}%"></div>
+                </div>
+                <div class="linear-progress preparation-progress">
+                    <div id="preparation-bar-{{ subject.id }}" class="linear-fill" style="width: {{ subject.preparation }}%"></div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-small save-btn">Save</button>
+        </form>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <p>No subjects yet. Add your first subject above.</p>
+</div>
+{% endif %}
+
+<div class="visitor-counter">
+    <span class="visitor-icon">&#128064;</span>
+    <span>Visitors: <strong>{{ visitor_count }}</strong></span>
+</div>
+{% endblock %}
