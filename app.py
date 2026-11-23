@@ -63,6 +63,7 @@ def init_db():
                 name TEXT NOT NULL,
                 confidence INTEGER NOT NULL DEFAULT 0,
                 preparation INTEGER NOT NULL DEFAULT 0,
+                weight INTEGER NOT NULL DEFAULT 1,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             );
@@ -84,6 +85,9 @@ def init_db():
         ]
         if "preparation" not in subject_columns:
             db.execute("ALTER TABLE subjects ADD COLUMN preparation INTEGER NOT NULL DEFAULT 0")
+
+        if "weight" not in subject_columns:
+            db.execute("ALTER TABLE subjects ADD COLUMN weight INTEGER NOT NULL DEFAULT 1")
 
         user_columns = [
             row["name"]
@@ -225,7 +229,11 @@ def dashboard():
     average_preparation = 0
     if total > 0:
         average_confidence = sum(s["confidence"] for s in subjects) / total
-        average_preparation = sum(s["preparation"] for s in subjects) / total
+        total_weight = sum(s["weight"] for s in subjects)
+        if total_weight > 0:
+            average_preparation = sum(s["preparation"] * s["weight"] for s in subjects) / total_weight
+        else:
+            average_preparation = sum(s["preparation"] for s in subjects) / total
 
     affirmation = random.choice(AFFIRMATIONS)
 
@@ -270,12 +278,21 @@ def clamp_percentage(value):
     return max(0, min(100, value))
 
 
+def clamp_positive_int(value, default=1):
+    try:
+        value = int(value)
+    except (ValueError, TypeError):
+        value = default
+    return max(1, value)
+
+
 @app.route("/subject/add", methods=["POST"])
 @login_required
 def add_subject():
     name = request.form.get("name", "").strip()
     confidence = clamp_percentage(request.form.get("confidence", "0"))
     preparation = clamp_percentage(request.form.get("preparation", "0"))
+    weight = clamp_positive_int(request.form.get("weight", "1"), 1)
 
     if not name:
         flash("Subject name is required.", "danger")
@@ -283,8 +300,8 @@ def add_subject():
 
     db = get_db()
     db.execute(
-        "INSERT INTO subjects (user_id, name, confidence, preparation) VALUES (?, ?, ?, ?)",
-        (session["user_id"], name, confidence, preparation),
+        "INSERT INTO subjects (user_id, name, confidence, preparation, weight) VALUES (?, ?, ?, ?, ?)",
+        (session["user_id"], name, confidence, preparation, weight),
     )
     db.commit()
     flash("Subject added.", "success")
@@ -296,6 +313,7 @@ def add_subject():
 def update_subject(subject_id):
     confidence = clamp_percentage(request.form.get("confidence"))
     preparation = clamp_percentage(request.form.get("preparation"))
+    weight = clamp_positive_int(request.form.get("weight"), 1)
 
     db = get_db()
     subject = db.execute(
@@ -308,8 +326,8 @@ def update_subject(subject_id):
         return redirect(url_for("dashboard"))
 
     db.execute(
-        "UPDATE subjects SET confidence = ?, preparation = ? WHERE id = ?",
-        (confidence, preparation, subject_id),
+        "UPDATE subjects SET confidence = ?, preparation = ?, weight = ? WHERE id = ?",
+        (confidence, preparation, weight, subject_id),
     )
     db.commit()
     flash("Progress updated.", "success")

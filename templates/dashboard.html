@@ -106,6 +106,10 @@
                 <output class="confidence-output">0%</output>
             </div>
         </div>
+        <div class="slider-group weight-group">
+            <label>Weight</label>
+            <input type="number" name="weight" min="1" value="1" class="weight-input" placeholder="1">
+        </div>
         <button type="submit" class="btn btn-primary">Add Subject</button>
     </form>
 </div>
@@ -136,6 +140,10 @@
                         <input type="range" name="preparation" min="0" max="100" value="{{ subject.preparation }}" class="confidence-slider preparation-slider" oninput="this.nextElementSibling.value = this.value + '%'; updateLinearBar(this, 'preparation-bar-{{ subject.id }}')">
                         <output class="confidence-output">{{ subject.preparation }}%</output>
                     </div>
+                </div>
+                <div class="slider-group weight-group">
+                    <label>Weight</label>
+                    <input type="number" name="weight" min="1" value="{{ subject.weight }}" class="weight-input">
                 </div>
             </div>
             <div class="subject-bars">
