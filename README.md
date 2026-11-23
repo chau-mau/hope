@@ -48,6 +48,17 @@ Open http://localhost:5000 in your browser.
 10. Reload the web app
 11. Visit `https://YOUR_USERNAME.pythonanywhere.com`
 
+## Deploy to Render (easiest)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/chau-mau/hope)
+
+1. Click the **Deploy to Render** button above
+2. Sign up or log in to Render (you can use GitHub login)
+3. Give the service a name (default: `hope`)
+4. Click **Create Web Service**
+5. Render will build and deploy automatically
+6. Visit the URL shown on the dashboard
+
 ## Environment Variables
 
 - `SECRET_KEY` — Flask secret key (set a fixed value for production)
