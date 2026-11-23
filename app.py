@@ -9,6 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
+app.permanent_session_lifetime = 60 * 60 * 24 * 30  # 30 days
 
 DATABASE = os.path.join(os.path.dirname(__file__), "todo.db")
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "static", "uploads")
@@ -171,6 +172,7 @@ def login():
         ).fetchone()
 
         if user and check_password_hash(user["password_hash"], password):
+            session.permanent = request.form.get("remember") == "on"
             session["user_id"] = user["id"]
             session["username"] = user["username"]
             flash(f"Welcome, {user['username']}!")

@@ -14,8 +14,25 @@
             <label for="password">Password</label>
             <input type="password" id="password" name="password" required>
         </div>
+        <div class="form-options">
+            <label class="checkbox-label">
+                <input type="checkbox" id="show-password" onchange="togglePassword('password')">
+                <span>Show password</span>
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" name="remember">
+                <span>Remember me</span>
+            </label>
+        </div>
         <button type="submit" class="btn btn-primary btn-block">Login</button>
     </form>
     <p class="auth-link">Don't have an account? <a href="{{ url_for('register') }}">Register</a></p>
 </div>
+
+<script>
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    field.type = field.type === "password" ? "text" : "password";
+}
+</script>
 {% endblock %}

@@ -18,8 +18,24 @@
             <label for="confirm">Confirm Password</label>
             <input type="password" id="confirm" name="confirm" required>
         </div>
+        <div class="form-options">
+            <label class="checkbox-label">
+                <input type="checkbox" id="show-password" onchange="togglePasswords()">
+                <span>Show passwords</span>
+            </label>
+        </div>
         <button type="submit" class="btn btn-primary btn-block">Register</button>
     </form>
     <p class="auth-link">Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
 </div>
+
+<script>
+function togglePasswords() {
+    const fields = [document.getElementById("password"), document.getElementById("confirm")];
+    const checkbox = document.getElementById("show-password");
+    fields.forEach(field => {
+        field.type = checkbox.checked ? "text" : "password";
+    });
+}
+</script>
 {% endblock %}
